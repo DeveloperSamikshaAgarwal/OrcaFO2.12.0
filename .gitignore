@@ -1,0 +1,8 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/SftpCsvTo WinSCP/bin/Debug/netcoreapp3.1
+/SftpCsvTo WinSCP/obj/Release/netcoreapp3.1
+/.vs
+/SftpCsvTo WinSCP/obj
