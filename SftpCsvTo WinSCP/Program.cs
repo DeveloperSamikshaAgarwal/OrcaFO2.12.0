@@ -325,17 +325,34 @@ namespace TradeStationToHedgeFund
                 var fs = new FileStream(filename.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 using (StreamReader rd = new StreamReader(fs))
                 {
-                    string[] tradeLines = rd.ReadToEnd().ToUpper().Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-                    int lastrow = tradeLines.Length - 1;
-                    string ex = tradeLines[lastrow].Split("EX=")[1].Split(" ST=")[0];
-                    Log.Logger.Information("ex value == " + ex);
+                    string ex="";
+                    string averagePrice = "";
+                    decimal avgPrice1 = 0;
+                    decimal avgPrice = 0;
+                    string bs = "";
+                    if (fs.Length>0)
+                    {
+                        string[] tradeLines = rd.ReadToEnd().ToUpper().Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+                        int lastrow = tradeLines.Length - 1;
+                         ex = tradeLines[lastrow].Split("EX=")[1].Split(" ST=")[0];
+                        Log.Logger.Information("ex value == " + ex);
 
-                    string averagePrice = tradeLines[lastrow].Split("AVG=")[1].Split(" ")[0];
-                    decimal avgPrice = Convert.ToDecimal(averagePrice);
-                    decimal avgPrice1 = Convert.ToDecimal(averagePrice);
-                    string bs = tradeLines[lastrow].Split("BS=")[1].Split(" ")[0];
-                    int qty = int.Parse(tradeLines[lastrow].Split("QTY=")[1].Split(" ")[0].Split("/")[0]);
-                    realPositon = bs.Contains("BUY") ? qty * 1 : qty * -1;
+                         averagePrice = tradeLines[lastrow].Split("AVG=")[1].Split(" ")[0];
+                         avgPrice = Convert.ToDecimal(averagePrice);
+                         avgPrice1 = Convert.ToDecimal(averagePrice);
+                         bs = tradeLines[lastrow].Split("BS=")[1].Split(" ")[0];
+                        int qty = int.Parse(tradeLines[lastrow].Split("QTY=")[1].Split(" ")[0].Split("/")[0]);
+                        realPositon = bs.Contains("BUY") ? qty * 1 : qty * -1;
+
+                    }
+                    else
+                    {
+                        realPositon = 0;
+                        avgPrice = 0;
+                        avgPrice1 = 0;
+
+                    }
+                   
 
                     if (ex.Contains("EXIT"))
                     {
