@@ -33,14 +33,14 @@ namespace Orca_FO_v2._12._0.PositonView
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.panel1 = new System.Windows.Forms.Panel();
             this.dataGridActivateContracts = new System.Windows.Forms.DataGridView();
-            this.grpboxActivateContracts = new System.Windows.Forms.GroupBox();
-            this.btnActivated = new System.Windows.Forms.Button();
-            this.btnRefresh = new System.Windows.Forms.Button();
             this.colEntityCode = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colEntityName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colRootContract = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colToBePublished = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.colModifiedOn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.grpboxActivateContracts = new System.Windows.Forms.GroupBox();
+            this.btnActivated = new System.Windows.Forms.Button();
+            this.btnRefresh = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridActivateContracts)).BeginInit();
             this.grpboxActivateContracts.SuspendLayout();
@@ -83,6 +83,45 @@ namespace Orca_FO_v2._12._0.PositonView
             this.dataGridActivateContracts.Name = "dataGridActivateContracts";
             this.dataGridActivateContracts.Size = new System.Drawing.Size(1327, 582);
             this.dataGridActivateContracts.TabIndex = 0;
+            this.dataGridActivateContracts.SelectionChanged += new System.EventHandler(this.dataGridActivateContracts_SelectionChanged);
+            // 
+            // colEntityCode
+            // 
+            this.colEntityCode.DataPropertyName = "EntityCode";
+            this.colEntityCode.HeaderText = "Entity Code";
+            this.colEntityCode.Name = "colEntityCode";
+            this.colEntityCode.ReadOnly = true;
+            // 
+            // colEntityName
+            // 
+            this.colEntityName.DataPropertyName = "Name";
+            this.colEntityName.HeaderText = "Entity Name";
+            this.colEntityName.Name = "colEntityName";
+            this.colEntityName.ReadOnly = true;
+            // 
+            // colRootContract
+            // 
+            this.colRootContract.DataPropertyName = "RootContract";
+            this.colRootContract.HeaderText = "Root Contract";
+            this.colRootContract.Name = "colRootContract";
+            this.colRootContract.ReadOnly = true;
+            this.colRootContract.Width = 120;
+            // 
+            // colToBePublished
+            // 
+            this.colToBePublished.DataPropertyName = "ToBePublished";
+            this.colToBePublished.HeaderText = "To Be Published";
+            this.colToBePublished.Name = "colToBePublished";
+            this.colToBePublished.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colToBePublished.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.colToBePublished.Width = 150;
+            // 
+            // colModifiedOn
+            // 
+            this.colModifiedOn.DataPropertyName = "ModifiedOn";
+            this.colModifiedOn.HeaderText = "Modified On";
+            this.colModifiedOn.Name = "colModifiedOn";
+            this.colModifiedOn.ReadOnly = true;
             // 
             // grpboxActivateContracts
             // 
@@ -122,44 +161,6 @@ namespace Orca_FO_v2._12._0.PositonView
             this.btnRefresh.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnRefresh.UseVisualStyleBackColor = true;
             this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
-            // 
-            // colEntityCode
-            // 
-            this.colEntityCode.DataPropertyName = "EntityCode";
-            this.colEntityCode.HeaderText = "Entity Code";
-            this.colEntityCode.Name = "colEntityCode";
-            this.colEntityCode.ReadOnly = true;
-            // 
-            // colEntityName
-            // 
-            this.colEntityName.DataPropertyName = "Name";
-            this.colEntityName.HeaderText = "Entity Name";
-            this.colEntityName.Name = "colEntityName";
-            this.colEntityName.ReadOnly = true;
-            // 
-            // colRootContract
-            // 
-            this.colRootContract.DataPropertyName = "RootContract";
-            this.colRootContract.HeaderText = "Root Contract";
-            this.colRootContract.Name = "colRootContract";
-            this.colRootContract.ReadOnly = true;
-            this.colRootContract.Width = 120;
-            // 
-            // colToBePublished
-            // 
-            this.colToBePublished.DataPropertyName = "ToBePublished";
-            this.colToBePublished.HeaderText = "To Be Published";
-            this.colToBePublished.Name = "colToBePublished";
-            this.colToBePublished.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.colToBePublished.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            this.colToBePublished.Width = 150;
-            // 
-            // colModifiedOn
-            // 
-            this.colModifiedOn.DataPropertyName = "ModifiedOn";
-            this.colModifiedOn.HeaderText = "Modified On";
-            this.colModifiedOn.Name = "colModifiedOn";
-            this.colModifiedOn.ReadOnly = true;
             // 
             // ActivateContracts
             // 
