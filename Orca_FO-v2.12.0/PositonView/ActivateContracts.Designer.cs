@@ -83,7 +83,7 @@ namespace Orca_FO_v2._12._0.PositonView
             this.dataGridActivateContracts.Name = "dataGridActivateContracts";
             this.dataGridActivateContracts.Size = new System.Drawing.Size(1327, 582);
             this.dataGridActivateContracts.TabIndex = 0;
-            this.dataGridActivateContracts.SelectionChanged += new System.EventHandler(this.dataGridActivateContracts_SelectionChanged);
+           // this.dataGridActivateContracts.SelectionChanged += new System.EventHandler(this.dataGridActivateContracts_SelectionChanged);
             // 
             // colEntityCode
             // 

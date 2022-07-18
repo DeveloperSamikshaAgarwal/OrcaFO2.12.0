@@ -6,3 +6,6 @@
 /.vs
 /Orca_FO-v2.12.0/bin/Debug
 /Orca_FO-v2.12.0/obj/Debug
+/Orca_FO-v2.12.0/obj/Release
+/SftpCsvTo WinSCP/obj/Release/netcoreapp3.1
+/SftpCsvTo WinSCP/obj/Debug/netcoreapp3.1

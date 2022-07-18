@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Orca_FO_v2._12._0.Utils;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -25,12 +26,12 @@ namespace Orca_FO_v2._12._0.PositonView
         public void GetActivateContracts()
         {
             MainForm.log.Information("Execution of SP for Activate/Deactivate contracts view started");
-            DataSet ds = DAL.FillUpDataSetFromSP( "Trade.GetContractsStatus",  null);
-            dtDBData = ds.Tables[0];
+            DataSet ds = DAL.FillUpDataSetFromSP("Trade.GetContractsStatus", null);
+            dtDBData = ds.Tables[0].Copy();
             MainForm.log.Information("Execution of SP for Activate/Deactivate contracts view completed");
             dataGridActivateContracts.DataSource = ds.Tables[0];
-            dataGridActivateContracts.Sort(dataGridActivateContracts.Columns[1],ListSortDirection.Ascending);
-           // this.dataGridActivateContracts.Columns["colEntityCode"].AllowGrouping = true;
+            dataGridActivateContracts.Sort(dataGridActivateContracts.Columns[1], ListSortDirection.Ascending);
+            // this.dataGridActivateContracts.Columns["colEntityCode"].AllowGrouping = true;
         }
 
         private void btnRefresh_Click(object sender, EventArgs e)
@@ -48,114 +49,208 @@ namespace Orca_FO_v2._12._0.PositonView
                 DataTable dtViewData = GridtoDatatable(dataGridActivateContracts);
                 var JoinResult = (from p in dtDBData.AsEnumerable()
                                   join t in dtViewData.AsEnumerable()
-                                  on p.Field<string>("Name") equals t.Field<string>("Name")
-                                 
+                                  on
+                                  new
+                                  {
+                                      entityName = p.Field<string>("Name"),
+                                      RootContract = p.Field<string>("RootContract")
+                                  }
+                        equals
+                        new
+                        {
+                            entityName = t.Field<string>("Name"),
+                            RootContract = t.Field<string>("RootContract")
+                        }
+
+                                  where (Convert.ToBoolean(Convert.ToString(p["TobePublished"]))) != (Convert.ToBoolean(Convert.ToString(t["TobePublished"])))
                                   select new
                                   {
-                                      ProductName = p.Field<string>("Product Name"),
-                                      BrandName = p.Field<string>("Brand Name"),
-                                      ProductCategory = t.Field<string>("Product Category"),
-                                      TaxCharge = t.Field<int>("Charge")
+                                      EntityCode = p.Field<int>("EntityCode"),
+                                      EntityName = p.Field<string>("Name"),
+                                      RootContract = p.Field<string>("RootContract"),
+                                      tobePublished = Convert.ToBoolean(Convert.ToString(t["TobePublished"]))
                                   }).ToList();
-                //int rowIndex = dataGridActivateContracts.CurrentRow.Index;
-                //string portf = dataGridActivateContracts.Rows[rowIndex].Cells["colPortfolioName"].Value.ToString();
-                //string contract = dataGridActivateContracts.Rows[rowIndex].Cells["colRootContract"].Value.ToString();
-                DialogResult res = MessageBox.Show("Do you want to Activate/Deactivate the Contracts  in the database ?", Application.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation);
-                if (res == DialogResult.Yes)
+                DataTable dtActiveContracts = DataTableUtilities.ToDataTable(JoinResult);
+
+
+
+
+
+                MainForm.log.Information("You have pressed yes");
+                int entitycode = 0;
+                bool tobePublished = false;
+                string rootContract = "";
+
+                bool isContainpos = false;
+                MainForm.log.Information("Excecution of SP for activativating/deactivating HFs is started");
+                for (int i = 0; i < dtActiveContracts.Rows.Count; i++)
                 {
-                    MainForm.log.Information("You have pressed yes");
-                    int entitycode = 0;
-                    bool tobePublished = false;
-                    string rootContract = "";
-                    MainForm.log.Information("Excecution of SP for activativating/deactivating HFs is started");
-                    for (int i = 0; i < dataGridActivateContracts.RowCount; i++)
+
+                    List<SqlParameter> sqlParameters1 = new List<SqlParameter>();
+                    sqlParameters1.Add(new SqlParameter()
                     {
+                        SqlDbType = SqlDbType.NVarChar,
+                        ParameterName = "@ContractName",
+                        Direction = ParameterDirection.Input,
+                        Value = dtActiveContracts.Rows[i]["RootContract"]
+                    });
+                    sqlParameters1.Add(new SqlParameter()
+                    {
+                        SqlDbType = SqlDbType.NVarChar,
+                        ParameterName = "@EntityName",
+                        Direction = ParameterDirection.Input,
+                        Value = dtActiveContracts.Rows[i]["EntityName"]
+                    });
 
-                        //List<SqlParameter> sqlParameters1 = new List<SqlParameter>();
-                        //sqlParameters1.Add(new SqlParameter()
-                        //{
-                        //    SqlDbType = SqlDbType.NVarChar,
-                        //    ParameterName = "@ContractName",
-                        //    Direction = ParameterDirection.Input,
-                        //    Value = contract
-                        //});
-                        //sqlParameters1.Add(new SqlParameter()
-                        //{
-                        //    SqlDbType = SqlDbType.NVarChar,
-                        //    ParameterName = "@Portfolio",
-                        //    Direction = ParameterDirection.Input,
-                        //    Value = portf
+                    DataSet dspostions = DAL.FillUpDataSetFromSP("[Trade].[GetPositionsData]", sqlParameters1);
+                    if (dtActiveContracts.Rows[i]["EntityName"].ToString() == "HF1")
+                    {
+                        if (Convert.ToInt32(dspostions.Tables[0].Rows[0]["apacLots"]) != 0 || Convert.ToInt32(dspostions.Tables[0].Rows[0]["emeaLots"]) != 0)
+                        {
+                            isContainpos = true;
+                        }
+                    }
 
-                        //});
-                        //DataSet dspostions = DAL.FillUpDataSetFromSP("[Trade].[GetPositionsData]", sqlParameters1);
+                    else if (dtActiveContracts.Rows[i]["EntityName"].ToString() == "HF2")
+                    {
+                        if (Convert.ToInt32(dspostions.Tables[0].Rows[0]["Lots"]) != 0)
+                        {
+                            isContainpos = true;
+                        }
+                    }
 
-                        if (!String.IsNullOrEmpty(dataGridActivateContracts.Rows[i].Cells["colEntityCode"].Value.ToString()))
+
+
+                }
+                if (isContainpos == true)
+                {
+                    DialogResult res1 = MessageBox.Show("We have open postions do you want continue", Application.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation);
+                    if (res1 == DialogResult.Yes)
+                    {
+                        for (int i = 0; i < dtActiveContracts.Rows.Count; i++)
                         {
-                            entitycode = Convert.ToInt32(dataGridActivateContracts.Rows[i].Cells["colEntityCode"].Value);
+                            if (!String.IsNullOrEmpty(dtActiveContracts.Rows[i]["EntityCode"].ToString()))
+                            {
+                                entitycode = Convert.ToInt32(dtActiveContracts.Rows[i]["EntityCode"]);
+                            }
+                            if (!String.IsNullOrEmpty(dtActiveContracts.Rows[i]["RootContract"].ToString()))
+                            {
+                                rootContract = dtActiveContracts.Rows[i]["RootContract"].ToString();
+                            }
+                            if (!String.IsNullOrEmpty(dtActiveContracts.Rows[i]["tobePublished"].ToString()))
+                            {
+                                tobePublished = Convert.ToBoolean(dtActiveContracts.Rows[i]["tobePublished"]);
+                            }
+                            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+                            sqlParameters.Add(new SqlParameter()
+                            {
+                                SqlDbType = SqlDbType.NVarChar,
+                                Direction = ParameterDirection.Input,
+                                ParameterName = "@RootContract",
+
+                                Value = rootContract
+                            });
+                            sqlParameters.Add(new SqlParameter()
+                            {
+                                SqlDbType = SqlDbType.Int,
+                                Direction = ParameterDirection.Input,
+                                ParameterName = "@EntityCode",
+                                Value = entitycode
+                            });
+                            sqlParameters.Add(new SqlParameter()
+                            {
+                                SqlDbType = SqlDbType.Bit,
+                                Direction = ParameterDirection.Input,
+                                ParameterName = "@TobePublished",
+                                Value = tobePublished
+                            });
+                            DAL.ExecuteSp("Trade.UpdateContractStatus", sqlParameters);
+
                         }
-                        if (!String.IsNullOrEmpty(dataGridActivateContracts.Rows[i].Cells["colRootContract"].Value.ToString()))
-                        {
-                            rootContract = dataGridActivateContracts.Rows[i].Cells["colRootContract"].Value.ToString();
-                        }
-                        if (!String.IsNullOrEmpty(dataGridActivateContracts.Rows[i].Cells["colToBePublished"].Value.ToString()))
-                        {
-                            tobePublished = Convert.ToBoolean(dataGridActivateContracts.Rows[i].Cells["colToBePublished"].Value);
-                        }
-                        List<SqlParameter> sqlParameters = new List<SqlParameter>();
-                        sqlParameters.Add(new SqlParameter()
-                        {
-                            SqlDbType = SqlDbType.NVarChar,
-                            Direction = ParameterDirection.Input,
-                            ParameterName = "@RootContract",
-                            Value = rootContract
-                        });
-                        sqlParameters.Add(new SqlParameter()
-                        {
-                            SqlDbType = SqlDbType.Int,
-                            Direction = ParameterDirection.Input,
-                            ParameterName = "@EntityCode",
-                            Value = entitycode
-                        });
-                        sqlParameters.Add(new SqlParameter()
-                        {
-                            SqlDbType = SqlDbType.Bit,
-                            Direction = ParameterDirection.Input,
-                            ParameterName = "@TobePublished",
-                            Value = tobePublished
-                        });
-                        DAL.ExecuteSp("Trade.UpdateContractStatus", sqlParameters);
+                        MainForm.log.Information("Sp executes successfully");
+                        MainForm.log.Information("contracts activation/deactivation is done successfully");
+                        MessageBox.Show("Contracts activation/deactivation is done successfully", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+
 
                     }
-                    MainForm.log.Information("Sp executes successfully");
-                    MainForm.log.Information("contracts activation/deactivation is done successfully");
-                    MessageBox.Show("Contracts activation/deactivation is done successfully", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+
                 }
+                else if(isContainpos==false)
+                {
+                    DialogResult res = MessageBox.Show("Do you want to Activate/Deactivate the Contracts  in the database ?", Application.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation);
+                    if (res == DialogResult.Yes)
+                    {
+                        for (int i = 0; i < dtActiveContracts.Rows.Count; i++)
+                        {
+                            if (!String.IsNullOrEmpty(dtActiveContracts.Rows[i]["EntityCode"].ToString()))
+                            {
+                                entitycode = Convert.ToInt32(dtActiveContracts.Rows[i]["EntityCode"]);
+                            }
+                            if (!String.IsNullOrEmpty(dtActiveContracts.Rows[i]["RootContract"].ToString()))
+                            {
+                                rootContract = dtActiveContracts.Rows[i]["RootContract"].ToString();
+                            }
+                            if (!String.IsNullOrEmpty(dtActiveContracts.Rows[i]["tobePublished"].ToString()))
+                            {
+                                tobePublished = Convert.ToBoolean(dtActiveContracts.Rows[i]["tobePublished"]);
+                            }
+                            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+                            sqlParameters.Add(new SqlParameter()
+                            {
+                                SqlDbType = SqlDbType.NVarChar,
+                                Direction = ParameterDirection.Input,
+                                ParameterName = "@RootContract",
+
+                                Value = rootContract
+                            });
+                            sqlParameters.Add(new SqlParameter()
+                            {
+                                SqlDbType = SqlDbType.Int,
+                                Direction = ParameterDirection.Input,
+                                ParameterName = "@EntityCode",
+                                Value = entitycode
+                            });
+                            sqlParameters.Add(new SqlParameter()
+                            {
+                                SqlDbType = SqlDbType.Bit,
+                                Direction = ParameterDirection.Input,
+                                ParameterName = "@TobePublished",
+                                Value = tobePublished
+                            });
+                            DAL.ExecuteSp("Trade.UpdateContractStatus", sqlParameters);
+
+                        }
+                        MainForm.log.Information("Sp executes successfully");
+                        MainForm.log.Information("contracts activation/deactivation is done successfully");
+                        MessageBox.Show("Contracts activation/deactivation is done successfully", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+
+                    }
+                }
+            
+                
+
+
                 else
                 {
-                    MainForm.log.Information("Contracts are activated/deactivated is not done because ypu have pressed No");
+                    MainForm.log.Information("Contracts are activated/deactivated is not done because you have pressed No");
                     MessageBox.Show("Contracts are activated/deactivated is not done because you have pressed No", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
             }
             catch (Exception ex)
             {
-                MainForm.log.Information("Contracts are activated/deactivated is not done because some error occurred: "+ ex);
+                MainForm.log.Information("Contracts are activated/deactivated is not done because some error occurred: " + ex);
                 MessageBox.Show("Contracts are activated/deactivated is not done because some error occurred", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
 
             }
-            
+
         }
-        public DataTable GridtoDatatable(DataGridView view)
+        public static DataTable GridtoDatatable(DataGridView view)
         {
-           // AppFunctions._logger.Information("Start converting grid data  into datatable");
             DataTable dt = new DataTable();
-            //dt.Columns.Add("ContractName");
-            //dt.Columns.Add("HistoricalPNL");
-            //dt.Columns.Add("MarketDate");
             foreach (DataGridViewColumn item in view.Columns)
             {
                 dt.Columns.Add(item.DataPropertyName);
             }
-           // AppFunctions._logger.Information("Start creating data table");
             for (int i = 0; i < view.RowCount; i++)
             {
                 DataRow row = dt.NewRow();
@@ -170,30 +265,14 @@ namespace Orca_FO_v2._12._0.PositonView
                             break;
                         }
                     }
-                    
-                    
+
+
                 }
                 dt.Rows.Add(row);
             }
-            //for (int i = 0; i < dt.Columns.Count; i++)
-            //{
-            //    DataColumn dc = dt.Columns[i];
-            //    if (!dc.ColumnName.Contains("TradePortfolio") && !dc.ColumnName.Contains("MarketDate") && !dc.ColumnName.Contains("HistoricalPNL")&& !dc.ColumnName.Contains("ContractName"))
-            //    {k
-            //        dt.Columns.Remove(dc);
-            //    }
-            //} 
-            //AppFunctions._logger.Information("Data table created successfully!!");
-            //AppFunctions._logger.Information("returing data table");
             return dt;
         }
-        static List<string> aa;
-        private void dataGridActivateContracts_SelectionChanged(object sender, EventArgs e)
-        {
-            //int rowIndex = dataGridActivateContracts.CurrentRow.Index;
-            //string portf = dataGridActivateContracts.Rows[rowIndex].Cells["colPortfolioName"].Value.ToString();
-            //string contract = dataGridActivateContracts.Rows[rowIndex].Cells["colRootContract"].Value.ToString();
-            //aa.Add(contract);
-        }
+        
+        
     }
 }

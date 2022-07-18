@@ -11,11 +11,16 @@ using System.Windows.Forms;
 using DAL = Orca_FO_v2._12._0.DataContext.DbContext;
 using AppSetting = Orca_FO_v2._12._0.Utils.GetterData;
 using System.IO;
+using Orca_FO_v2._12._0.PositonView;
+using Orca_FO_v2._12._0.Utils;
 
 namespace Orca_FO_v2._12._0.MasterView
 {
     public partial class ActivateHFs : UserControl
     {
+        DataTable dtAllHF;
+
+
         public ActivateHFs()
         {
             InitializeComponent();
@@ -25,7 +30,7 @@ namespace Orca_FO_v2._12._0.MasterView
         public void GetAllHFs()
         {
             MainForm.log.Information("Execution of SP for Activate/Deactivate HFs view started");
-            DataTable dtAllHF = DAL.FillUpDataSetFromSP("[Static].[ActivateDeActivateHFs]",null).Tables[0];
+            dtAllHF = DAL.FillUpDataSetFromSP("[Static].[ActivateDeActivateHFs]",null).Tables[0];
             MainForm.log.Information("Execution of SP for Activate/Deactivate HFs view completed");
             dataGridHFs.DataSource = dtAllHF;
         }
@@ -43,6 +48,31 @@ namespace Orca_FO_v2._12._0.MasterView
             {
                 
                 MainForm.log.Information("Activate/Deactivate HFs button is clicked");
+                DataTable dtViewData = ActivateContracts.GridtoDatatable(dataGridHFs);
+                var JoinResult = (from p in dtAllHF.AsEnumerable()
+                                  join t in dtViewData.AsEnumerable()
+                                  on
+                                  new
+                                  {
+                                      entityName = p.Field<string>("Name"),
+                                     // RootContract = p.Field<string>("RootContract")
+                                  }
+                        equals
+                        new
+                        {
+                            entityName = t.Field<string>("Name"),
+                           // RootContract = t.Field<string>("RootContract")
+                        }
+
+                                  where (Convert.ToBoolean(Convert.ToString(p["TobePublished"]))) != (Convert.ToBoolean(Convert.ToString(t["TobePublished"])))
+                                  select new
+                                  {
+                                     // EntityCode = p.Field<int>("EntityCode"),
+                                      EntityName = p.Field<string>("Name"),
+                                      RootContract = p.Field<string>("RootContract"),
+                                      tobePublished = Convert.ToBoolean(Convert.ToString(t["TobePublished"]))
+                                  }).ToList();
+                DataTable dtActiveContracts = DataTableUtilities.ToDataTable(JoinResult);
                 DialogResult res = MessageBox.Show("Do you want to activate or deactivate the portfolio for the particular entitiy?", Application.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (DialogResult.Yes==res)
                 {
