@@ -18,7 +18,7 @@ namespace Orca_FO_v2._12._0.MasterView
 {
     public partial class ActivateHFs : UserControl
     {
-        DataTable dtAllHF;
+        DataTable dtAllHF1;
 
 
         public ActivateHFs()
@@ -30,8 +30,9 @@ namespace Orca_FO_v2._12._0.MasterView
         public void GetAllHFs()
         {
             MainForm.log.Information("Execution of SP for Activate/Deactivate HFs view started");
-            dtAllHF = DAL.FillUpDataSetFromSP("[Static].[ActivateDeActivateHFs]",null).Tables[0];
+            DataTable dtAllHF = DAL.FillUpDataSetFromSP("[Static].[ActivateDeActivateHFs]",null).Tables[0];
             MainForm.log.Information("Execution of SP for Activate/Deactivate HFs view completed");
+            dtAllHF1 = dtAllHF.Copy();
             dataGridHFs.DataSource = dtAllHF;
         }
 
@@ -49,80 +50,179 @@ namespace Orca_FO_v2._12._0.MasterView
                 
                 MainForm.log.Information("Activate/Deactivate HFs button is clicked");
                 DataTable dtViewData = ActivateContracts.GridtoDatatable(dataGridHFs);
-                var JoinResult = (from p in dtAllHF.AsEnumerable()
+                var JoinResult = (from p in dtAllHF1.AsEnumerable()
                                   join t in dtViewData.AsEnumerable()
                                   on
                                   new
                                   {
                                       entityName = p.Field<string>("Name"),
-                                     // RootContract = p.Field<string>("RootContract")
+                                      Portfolio = p.Field<string>("Portfolio")
                                   }
                         equals
                         new
                         {
                             entityName = t.Field<string>("Name"),
-                           // RootContract = t.Field<string>("RootContract")
+                            Portfolio = t.Field<string>("Portfolio")
                         }
 
-                                  where (Convert.ToBoolean(Convert.ToString(p["TobePublished"]))) != (Convert.ToBoolean(Convert.ToString(t["TobePublished"])))
+                                  where (Convert.ToBoolean(Convert.ToString(p["isThisActive"]))) != (Convert.ToBoolean(Convert.ToString(t["isThisActive"])))
                                   select new
                                   {
-                                     // EntityCode = p.Field<int>("EntityCode"),
+                                      EntityCode = p.Field<int>("EntityCode"),
                                       EntityName = p.Field<string>("Name"),
-                                      RootContract = p.Field<string>("RootContract"),
-                                      tobePublished = Convert.ToBoolean(Convert.ToString(t["TobePublished"]))
+                                      Portfolio = p.Field<string>("Portfolio"),
+                                      isThisActive = Convert.ToBoolean(Convert.ToString(t["isThisActive"]))
                                   }).ToList();
-                DataTable dtActiveContracts = DataTableUtilities.ToDataTable(JoinResult);
-                DialogResult res = MessageBox.Show("Do you want to activate or deactivate the portfolio for the particular entitiy?", Application.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (DialogResult.Yes==res)
+                DataTable dtActiveHFs  = DataTableUtilities.ToDataTable(JoinResult);
+                //DialogResult res = MessageBox.Show("Do you want to activate or deactivate the portfolio for the particular entitiy?", Application.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                //if (DialogResult.Yes==res)
                 {
-                    int adaptorCode = 0;
+                    int entityCode = 0;
                     string portfolio = "";
                     bool isThisActive = false;
-                    MainForm.log.Information("Excecution of SP for activativating/deactivating HFs is started");
-                    for (int i = 0; i < dataGridHFs.RowCount; i++)
+                    bool isContainpos = false;
+                    for (int i = 0; i < dtActiveHFs.Rows.Count; i++)
                     {
-                        if (!String.IsNullOrEmpty(dataGridHFs.Rows[i].Cells["colEntityCode"].Value.ToString()))
-                        {
-                            adaptorCode = Convert.ToInt32(dataGridHFs.Rows[i].Cells["colEntityCode"].Value);
-                        }
-                        if (!String.IsNullOrEmpty(dataGridHFs.Rows[i].Cells["colPortfolio"].Value.ToString()))
-                        {
-                            portfolio = dataGridHFs.Rows[i].Cells["colPortfolio"].Value.ToString();
-                        }
-                        if (!String.IsNullOrEmpty(dataGridHFs.Rows[i].Cells["colisThisActive"].Value.ToString()))
-                        {
-                            isThisActive = Convert.ToBoolean(dataGridHFs.Rows[i].Cells["colisThisActive"].Value);
-                        }
-                        List<SqlParameter> sqlParameters = new List<SqlParameter>();
-                        sqlParameters.Add(new SqlParameter()
-                        {
-                            SqlDbType = SqlDbType.Int,
-                            ParameterName = "@AdaptorCode",
-                            Direction = ParameterDirection.Input,
-                            Value = adaptorCode
-                        });
-                        sqlParameters.Add(new SqlParameter()
+
+                        List<SqlParameter> sqlParameters1 = new List<SqlParameter>();
+                        sqlParameters1.Add(new SqlParameter()
                         {
                             SqlDbType = SqlDbType.NVarChar,
                             ParameterName = "@Portfolio",
                             Direction = ParameterDirection.Input,
-                            Value = portfolio
+                            Value = dtActiveHFs.Rows[i]["Portfolio"]
                         });
-                        sqlParameters.Add(new SqlParameter()
+                        sqlParameters1.Add(new SqlParameter()
                         {
-                            SqlDbType = SqlDbType.Bit,
-                            ParameterName = "@isThisActivebyPF",
+                            SqlDbType = SqlDbType.NVarChar,
+                            ParameterName = "@EntityName",
                             Direction = ParameterDirection.Input,
-                            Value = isThisActive
+                            Value = dtActiveHFs.Rows[i]["EntityName"]
                         });
-                        DAL.ExecuteSp("[Static].[UpdateActivateExternalAdaptor]", sqlParameters);
+
+                        DataSet dspostions = DAL.FillUpDataSetFromSP("Trade.GetOpenPositionForHFs", sqlParameters1);
+                        if (dtActiveHFs.Rows[i]["EntityName"].ToString() == "HF1")
+                        {
+                            if (Convert.ToInt32(dspostions.Tables[0].Rows[0]["RowCountNo"]) != 0)
+                            {
+                                isContainpos = true;
+                            }
+                        }
+
+                        else if (dtActiveHFs.Rows[i]["EntityName"].ToString() == "HF2")
+                        {
+                            if (Convert.ToInt32(dspostions.Tables[0].Rows[0]["RowCountNo"]) != 0)
+                            {
+                                isContainpos = true;
+                            }
+                        }
+
+
 
                     }
-                    MainForm.log.Information("SpExecutes successfully");
-                    MainForm.log.Information("Hedge fund activation/deactivation is done successfully");
-                    MessageBox.Show("Hedge fund activation/deactivation is done successfully", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                }
+
+                    MainForm.log.Information("Excecution of SP for activativating/deactivating HFs is started");
+                    if (isContainpos == true)
+                    {
+                        DialogResult res1 = MessageBox.Show("We have open postions do you want continue", Application.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation);
+                        if (res1 == DialogResult.Yes)
+                        {
+                            for (int i = 0; i < dtActiveHFs.Rows.Count; i++)
+                            {
+                                if (!String.IsNullOrEmpty(dtActiveHFs.Rows[i]["EntityCode"].ToString()))
+                                {
+                                    entityCode = Convert.ToInt32(dtActiveHFs.Rows[i]["EntityCode"]);
+                                }
+                                if (!String.IsNullOrEmpty(dtActiveHFs.Rows[i]["Portfolio"].ToString()))
+                                {
+                                    portfolio = dtActiveHFs.Rows[i]["Portfolio"].ToString();
+                                }
+                                if (!String.IsNullOrEmpty(dtActiveHFs.Rows[i]["isThisActive"].ToString()))
+                                {
+                                    isThisActive = Convert.ToBoolean(dtActiveHFs.Rows[i]["isThisActive"]);
+                                }
+                                List<SqlParameter> sqlParameters = new List<SqlParameter>();
+                                sqlParameters.Add(new SqlParameter()
+                                {
+                                    SqlDbType = SqlDbType.Int,
+                                    ParameterName = "@AdaptorCode",
+                                    Direction = ParameterDirection.Input,
+                                    Value = entityCode
+                                });
+                                sqlParameters.Add(new SqlParameter()
+                                {
+                                    SqlDbType = SqlDbType.NVarChar,
+                                    ParameterName = "@Portfolio",
+                                    Direction = ParameterDirection.Input,
+                                    Value = portfolio
+                                });
+                                sqlParameters.Add(new SqlParameter()
+                                {
+                                    SqlDbType = SqlDbType.Bit,
+                                    ParameterName = "@isThisActivebyPF",
+                                    Direction = ParameterDirection.Input,
+                                    Value = isThisActive
+                                });
+                                DAL.ExecuteSp("[Static].[UpdateActivateExternalAdaptor]", sqlParameters);
+
+                            }
+                            MainForm.log.Information("SpExecutes successfully");
+                            MainForm.log.Information("Hedge fund activation/deactivation is done successfully");
+                            MessageBox.Show("Hedge fund activation/deactivation is done successfully", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        }
+
+                    }
+                    else if (isContainpos == false)
+                    {
+                        DialogResult res = MessageBox.Show("Do you want to activate or deactivate the portfolio for the particular entitiy?", Application.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation);
+                        if (res == DialogResult.Yes)
+                        {
+                            for (int i = 0; i < dtActiveHFs.Rows.Count; i++)
+                            {
+                                if (!String.IsNullOrEmpty(dtActiveHFs.Rows[i]["EntityCode"].ToString()))
+                                {
+                                    entityCode = Convert.ToInt32(dtActiveHFs.Rows[i]["EntityCode"]);
+                                }
+                                if (!String.IsNullOrEmpty(dtActiveHFs.Rows[i]["Portfolio"].ToString()))
+                                {
+                                    portfolio = dtActiveHFs.Rows[i]["Portfolio"].ToString();
+                                }
+
+                                if (!String.IsNullOrEmpty(dtActiveHFs.Rows[i]["isThisActive"].ToString()))
+                                {
+                                    isThisActive = Convert.ToBoolean(dtActiveHFs.Rows[i]["isThisActive"]);
+                                }
+                                List<SqlParameter> sqlParameters = new List<SqlParameter>();
+                                sqlParameters.Add(new SqlParameter()
+                                {
+                                    SqlDbType = SqlDbType.Int,
+                                    ParameterName = "@AdaptorCode",
+                                    Direction = ParameterDirection.Input,
+                                    Value = entityCode
+                                });
+                                sqlParameters.Add(new SqlParameter()
+                                {
+                                    SqlDbType = SqlDbType.NVarChar,
+                                    ParameterName = "@Portfolio",
+                                    Direction = ParameterDirection.Input,
+                                    Value = portfolio
+                                });
+                                sqlParameters.Add(new SqlParameter()
+                                {
+                                    SqlDbType = SqlDbType.Bit,
+                                    ParameterName = "@isThisActivebyPF",
+                                    Direction = ParameterDirection.Input,
+                                    Value = isThisActive
+                                });
+                                DAL.ExecuteSp("[Static].[UpdateActivateExternalAdaptor]", sqlParameters);
+
+                            }
+                            MainForm.log.Information("SpExecutes successfully");
+                            MainForm.log.Information("Hedge fund activation/deactivation is done successfully");
+                            MessageBox.Show("Hedge fund activation/deactivation is done successfully", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        }
+                    }
+                }    
                 GetAllHFs();
 
 

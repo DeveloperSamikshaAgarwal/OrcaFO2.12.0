@@ -71,11 +71,6 @@ namespace Orca_FO_v2._12._0.PositonView
                                       tobePublished = Convert.ToBoolean(Convert.ToString(t["TobePublished"]))
                                   }).ToList();
                 DataTable dtActiveContracts = DataTableUtilities.ToDataTable(JoinResult);
-
-
-
-
-
                 MainForm.log.Information("You have pressed yes");
                 int entitycode = 0;
                 bool tobePublished = false;
@@ -122,6 +117,7 @@ namespace Orca_FO_v2._12._0.PositonView
 
 
                 }
+               
                 if (isContainpos == true)
                 {
                     DialogResult res1 = MessageBox.Show("We have open postions do you want continue", Application.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation);
