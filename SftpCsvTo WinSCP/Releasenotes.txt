@@ -1,15 +1,9 @@
-Release Notes of Orcav2.11
+Release Notes of Orcav2.12
 
-1. Add a new Portfolio for HF2.
-	1.1 functionality to proccess the Equity Indices files for  Hedge Fund-2.
-	1.2 then after that to send the processed file data to the database.
-	1.3 then after that send to the  Hedge Fund-2.
+1. Implement the limits for Hf2 FX Portfolio
+	1.1 Check whether the limits are breached or not for Currencies for HF2
 
 
-2. Also improve the mail functionality for both of the hedge funds.
-	2.1 send success mail by attaching the users in bcc to the Hedge Fund-2.
-	2.2 send exception mail by attaching the users in bcc to us.
-
-3. Add a functionality to improve the reading of the file.
-	3.1 Make the proccess relax timer to 20 sec.
-	3.2 Add a new parameter for making the process to sleep 10 sec after making th list of changed files and before proccessing the chaned files.
+2. Also improve the  functionality  of reading the file for both of the hedge funds.
+	2.1 Before reading the file firest we will check whether the file has some data or not  and according to the condition we are inserting the positions it he DB.
+	
