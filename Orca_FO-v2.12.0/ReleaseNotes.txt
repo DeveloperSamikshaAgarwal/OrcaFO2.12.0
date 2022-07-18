@@ -1,0 +1,6 @@
+﻿1. Modify the way to activate or deactivate the contracts.
+	1.1 If we have the open positions then the message box is displayed that  you have open positions do you want to continue.
+	1.2 else Message box is displayed "Do you want to activate/deactivate the contracts".
+2.  Modify the way to activate or deactivate the entity.
+	2.1 If we have the open positions then the message box is displayed that  you have open positions do you want to continue.
+	2.2 else Message box is displayed "Do you want to activate/deactivate the entity according to portfolio".

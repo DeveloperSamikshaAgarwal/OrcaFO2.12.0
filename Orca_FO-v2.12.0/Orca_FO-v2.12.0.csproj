@@ -292,6 +292,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ReleaseNotes.txt" />
     <Content Include="Resources\activate.png" />
     <Content Include="Resources\activate1.png" />
     <Content Include="Resources\cancel.png" />

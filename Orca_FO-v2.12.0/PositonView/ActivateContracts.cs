@@ -169,6 +169,11 @@ namespace Orca_FO_v2._12._0.PositonView
 
 
                     }
+                    else
+                    {
+                        MainForm.log.Information("Contracts are activated/deactivated is not done because you have pressed No");
+                        MessageBox.Show("Contracts are activated/deactivated is not done because you have pressed No", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    }
 
                 }
                 else if(isContainpos==false)
@@ -221,16 +226,18 @@ namespace Orca_FO_v2._12._0.PositonView
                         MessageBox.Show("Contracts activation/deactivation is done successfully", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
 
                     }
+                    else
+                    {
+                        MainForm.log.Information("Contracts are activated/deactivated is not done because you have pressed No");
+                        MessageBox.Show("Contracts are activated/deactivated is not done because you have pressed No", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    }
                 }
-            
-                
+
+                GetActivateContracts();
 
 
-                else
-                {
-                    MainForm.log.Information("Contracts are activated/deactivated is not done because you have pressed No");
-                    MessageBox.Show("Contracts are activated/deactivated is not done because you have pressed No", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                }
+
+
             }
             catch (Exception ex)
             {
